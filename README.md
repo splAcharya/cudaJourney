@@ -57,11 +57,11 @@ T2:     20  50  150
 Now, Lets Look at now the Results From Nsight Compute
 
 Row Major Access
-![alt_text](https://github.com/splAcharya/ASL_Alphabet_Translator/blob/master/glove.jpg)
+![alt_text](https://github.com/splAcharya/cudaJourney/blob/main/matrix_sums_rowaccess.png)
 
 
 Columns Major Access
-![alt_text](https://github.com/splAcharya/ASL_Alphabet_Translator/blob/master/glove.jpg)
+![alt_text](https://github.com/splAcharya/cudaJourney/blob/main/matrix_sums_colaccess.png)
 
 The compute throughput is 3x more for columns major.
 THe Memory throughput is almost 2x faster fro column major.
