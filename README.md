@@ -1,6 +1,6 @@
 # cudaJourney
 Learning How to Use Cuda and GPu Programmig.
-Major Source: 
+Major Source:
     https://www.olcf.ornl.gov/cuda-training-series/
     This is a trainign series from Nvidia for Oakridge National Lab.
     I am starting my cuda journey from these training videos.
@@ -57,11 +57,11 @@ T2:     20  50  150
 Now, Lets Look at now the Results From Nsight Compute
 
 Row Major Access
-
+![alt_text](https://github.com/splAcharya/ASL_Alphabet_Translator/blob/master/glove.jpg)
 
 
 Columns Major Access
-
+![alt_text](https://github.com/splAcharya/ASL_Alphabet_Translator/blob/master/glove.jpg)
 
 The compute throughput is 3x more for columns major.
 THe Memory throughput is almost 2x faster fro column major.
@@ -73,21 +73,20 @@ Remeber the GLobal Memory is in ROw Major FOrmat
 
 
 Row Major Access
-C1   |          |           |     
+C1   |          |           |
 C2      |           |           |
-C3           |          |           |  
+C3           |          |           |
 A = [0, 10, 20, 30, 40, 50, 60, 70, 80]
 
-At each cycle, when there is a request mamde to GMEM, threads are accessing 
+At each cycle, when there is a request mamde to GMEM, threads are accessing
 memory some distance appart, so the access will need multiple fetches.
 whereas the column major access reduces these number of fetches.
 
 COlumn Major Access
-C1   |  |    |     
+C1   |  |    |
 C2              |   |   |
-C3                          |   |   |  
+C3                          |   |   |
 A = [0, 10, 20, 30, 40, 50, 60, 70, 80]
 
--------------------------------------------------------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------
-
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
