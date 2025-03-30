@@ -1,0 +1,15 @@
+
+# Ignore log files
+*.log
+
+# Ignore build directory
+build/
+
+# Ignore temporary files
+*.tmp
+
+# Ignore .lib files
+*.lib
+
+# Ignore .o files
+*.o
