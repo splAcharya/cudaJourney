@@ -28,16 +28,20 @@ void print_device_prop()
 }
 
 const int DIM_SIZE =  95;
-const int BLOCK_DIM = 15; /* 16 * 16 = 256*/
+const int BLOCK_DIM = 16; /* 16 * 16 = 256*/
 
 void generate_float_matrix(size_t M, size_t N, float *output_matrix) {
+    
     for (int y = 0; y < M; y++){
+        
         for (int x = 0; x < N; x++){
-            int flat_idx = y * M + x;
+            
+            int flat_idx = (y * N) + x;
+            
             float val = ((float) rand() / RAND_MAX) * 2.0 + 1.0;
             *(output_matrix + flat_idx) = val;
             
-            //*(output_matrix + flat_idx) = flat_idx % 200;
+            *(output_matrix + flat_idx) = flat_idx % 200;
             //*(output_matrix + flat_idx) = 1.0f;
         }
     }
@@ -46,50 +50,68 @@ void generate_float_matrix(size_t M, size_t N, float *output_matrix) {
 void print_matrix(const float *matrix, size_t M, size_t N){
     for (int y = 0; y < M; y++){
         for (int x= 0; x < N; x++){
-            printf("%f  ", matrix[y * M + x]);
+            printf("%f  ", matrix[ (y * N) + x]);
         }
         printf("\n");
     }
-    printf("\n\n");
+    printf("\n");
 }
 
-void hostk_matmul_basic(const float * A, const float * B, float * C, size_t M, size_t N){
-    
-    for (int y = 0; y < M; y++){
-        
-        for (int x = 0; x < N; x++){
-            
-            /* entire row X entire column */
-            float cur_sum = 0.0f;
-            for (int i = 0; i < M; i++)
-                cur_sum += (A[y * M + i] * B[i * N + x]);
 
-            C[y * N + x] = cur_sum;  
+void hostk_matmul_basic(const float * A, const float * B, float * C, size_t M, size_t N, size_t P)
+{
+    /* for every row, col of the output matrix
+       A = (M, N), B= (N, P), C = (M, P)
+    */
+    for (int y = 0; y < M; y ++)
+    {
+        for (int x = 0; x < P; x++)
+        {
+            float rsum = 0.0f;
+            
+            /* For every, column in A and every row in B */
+            for (int i = 0; i < N; i++)
+            {
+                /* A = fix row, change col*, A has N element Per Row */
+                size_t idx_a = (y * N) + i;
+
+                /* B = change row, fix col, B has P elements Per Row */
+                size_t idx_b = (i * P) + x;
+
+                rsum += (A[idx_a] * B[idx_b]);
+            }
+
+            /* Update Output Matrix C With The Cumulative Sum of Products 
+               C has P elements per row
+            */
+           size_t idx_c = (y * P) + x;
+           C[idx_c] = rsum;
         }
     }
 }
 
 // Function declarations
-void host_main() {
-    printf("Executing host_main()\n");
+void host_main_basic(size_t M, size_t N, size_t P) {
+    printf("Executing host_main(M:%zu, N:%zu, P:%zu)\n", M, N, P);
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
     float *h_A, *h_B, *h_C;
-    size_t alloc_size = 0;
+    size_t alloc_size_h_a = M * N * sizeof(float);
+    size_t alloc_size_h_b = N * P * sizeof(float);
+    size_t alloc_size_h_c = M * P * sizeof(float);
 
-    alloc_size = DIM_SIZE * DIM_SIZE * sizeof(float);
-    h_A = (float *)malloc(alloc_size);
-    h_B = (float *)malloc(alloc_size);
-    h_C = (float *)malloc(alloc_size);
+    h_A = (float *)malloc(alloc_size_h_a);
+    h_B = (float *)malloc(alloc_size_h_b);
+    h_C = (float *)malloc(alloc_size_h_c);
 
-    generate_float_matrix(DIM_SIZE, DIM_SIZE, h_A);
-    generate_float_matrix(DIM_SIZE, DIM_SIZE, h_B);
+    generate_float_matrix(M, N, h_A);
+    generate_float_matrix(N, P, h_B);
 
     cudaEventRecord(start, 0);
 
-    hostk_matmul_basic(h_A, h_B, h_C, DIM_SIZE, DIM_SIZE);
+    hostk_matmul_basic(h_A, h_B, h_C, M, N, P);
 
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
@@ -97,9 +119,9 @@ void host_main() {
     cudaEventElapsedTime(&elapsed_time, start, stop);
     printf("Host Elapsed Time: %f ms\n", elapsed_time);
 
-    //print_matrix(h_A, DIM_SIZE, DIM_SIZE);
-    //print_matrix(h_B, DIM_SIZE, DIM_SIZE);
-    //print_matrix(h_C, DIM_SIZE, DIM_SIZE);
+    //print_matrix(h_A, M, N);
+    //print_matrix(h_B, N, P);
+    //print_matrix(h_C, M, P);
     
     free(h_A);
     free(h_B);
@@ -107,154 +129,140 @@ void host_main() {
 }
 
 
-/*
-A00  A01       B00  B01
-A10  A11       B10  B11
-
-C00 = A00 * B00   +    A01 * B10
-
-*/
-void hostk_matmul_tiled_cm(const float *A, const float *B, float *C, size_t y_dim, size_t x_dim)
+void verify_results(const float *A, const float *B, const float *C, size_t M, size_t N, size_t P)
 {
-    //printf("Submat, y_dim:%zu, x_dim:%zu\n", y_dim, x_dim);
-    /* FOr each output element */
-    //float lc[y_dim][x_dim];
-
-    for (int y = 0; y < y_dim; y++){
-        for (int x = 0; x < x_dim; x++){
-
-            /* iterate entire row for A, entire column for B*/
-            float rsum = 0.0f;
-            for (int i = 0; i < y_dim; i++){
-                size_t flat_idx_a = (y * x_dim) + i;
-                size_t flat_idx_b = (i * x_dim) + x;
-                //printf("Submat, flat_idx_a:%zu, flat_idx_b:%zu\n", flat_idx_a, flat_idx_b);
-                rsum += (A[flat_idx_a] * B[flat_idx_b]);
+    size_t alloc_size_v = M * P * sizeof(float);
+    float* V = (float *)malloc(alloc_size_v);
+    
+    /* get results from simplest matrix mul algo */
+    hostk_matmul_basic(A, B, V, M, N, P);
+   
+    //print_matrix(C, M, P);
+    //printf("\n");
+    //print_matrix(V, M, P);
+    
+    for (int y = 0; y < M; y++)
+    {
+        for (int x = 0; x < P; x++)
+        {
+            int flat_idx = (y * P) + x;
+            
+            if (fabsf(C[flat_idx] - V[flat_idx]) > 1e-3)
+            // if (h_C[flat_idx] != h_V[flat_idx])
+            {
+                printf("Wrong Result From Host Tiled @(y,x):(%i,%i)=>flat:%i!\n", y, x, flat_idx);
+                printf("Host Val:%f, Verification Val:%f\n", C[flat_idx], V[flat_idx]);
+                exit(1);
             }
-           
-            size_t flat_idx_c = y * x_dim + x;
-            //printf("Submat, flat_idx_c:%zu\n", flat_idx_c);
-            C[flat_idx_c] += rsum;
-            //lc[y][x] = rsum;
         }
-    }
+    } 
 
-    //float lv[y_dim][x_dim];
-    //hostk_matmul_basic(A, B, (float*)lv, y_dim, x_dim);
+    printf("Correct Result It Semms Within [1e-3] Tolerance \n");
 
-    //for (int y = 0; y < y_dim; y++){
-    //    for (int x = 0; x < x_dim; x++){
-    //        if (lc[y][x] != lv[y][x]){
-    //            printf("Wrong SubMultiplicatoion @(y:%d,x:%d), verif:%f, res:%f\n", y, x, lv[y][x], lc[y][x]);
-    //            exit(1);
-    //        }
-    //    }
-    //}
-
-    //print_matrix(A, y_dim, x_dim);
-    //print_matrix(B, y_dim, x_dim);
-    //print_matrix(C, y_dim, x_dim);
-    //printf("------Sub Mat----\n");
+    free(V);
 }
 
 
+void hostk_matmul_tiled(const float * A, const float *B, float *C, size_t M, size_t N, size_t P)
+{
+    printf("In Host Tiled(M:%zu, N:%zu, P:%zu)\n", M, N, P);
 
-/* think from the output matrix perspective */
-//if (tile == 0)
-//    sm_C[ty][tx] = 0.0f; //;
-/* dry run             //
-    In the matrix below,
+    if (M < BLOCK_DIM || N < BLOCK_DIM || P < BLOCK_DIM)
+    {
+        printf("Matrix Size is smaller than Block Size, skipping tiled matrix multiplication\n");
+        return;
+    }
 
-    FOr Matix A, tiles iterater from let to right, T0 --T1
-    T0 ==> {0,0} to flat idx
-    0   y   +   x 
-    1   y   +   (x   +   1)
-    4   {(y  + 1)* DIM_SIZE} + x
-    5   (y + 1) * DIM_SIZE  + x + 1
-
-    T1 ==> (0, 1) to flat idx
-    2   y   +   (x  * BLOCK_DIM)
-    3   y   +   (x  * BLOCK_DIM + 1)
-    6   {(y  + 1) * DIM_SIZE} + (x * BLOCK_DIM)
-    7   {(y + 1 ) * DIM_SIZE} + (x * BLOCK_DIM + 1)
-
-    Generalize >>> {(y + ty) * DIM_SIZE} + {(x * BLOCK_DIM) + tx}
-
-    T0 ==> {x0, y0}
-    ty  tx
-    0   0   0+0 * 4 + 0 * 2 + 0 = 0
-    0   1   0+0 * 4 + 0 * 2 + 1 = 1
-    1   0   0+1 * 4 + 0 * 2 + 0 = 4
-    1   1   0+1 * 4 + 0 * 2 + 1 = 5
-    T2  ==> {x0,y2}
-    ty  tx
-    0   0   2 + 0 * 4 + 0 * 2 + 0 = 8
-    0   1   2 + 0 * 4 + 0 * 2 + 1 = 9
-    1   0   2 + 1 * 4 + 0 * 2 + 0 = 12
-    1   1   2 + 1 * 4 + 0 * 2 + 1 = 13
-
-    Now for matrix B, we go from top to bottom . T0 ==> T2
-    same generalization should apply as long as y value is 
-    inmcremented accordiny.
-
-   -------------------
-   |    T0  |    T1  | 
-   | -------|--------|
-   | 0   1  | 2   3  |
-   | 4   5  | 6   7  |
-   | ----------------|
-   | 8   9  | 10  11 |
-   | 12  13 | 14  15 |
-   | ----------------|
-   |    T2  |   T3   |
-   -------------------
-*/
-void hostk_matmul_tiled(const float * A, const float *B, float *C, size_t y_dim, size_t x_dim){
-
-    printf("Host Tiled: In hostk_matmul_tiled\n");
+    /* define tiles, set the size same as the block size in device
+    to simulate device like kernels */
     float sm_A[BLOCK_DIM][BLOCK_DIM];
     float sm_B[BLOCK_DIM][BLOCK_DIM];
     float sm_C[BLOCK_DIM][BLOCK_DIM];
+   
+    size_t num_tiles = (N + BLOCK_DIM - 1) / BLOCK_DIM;
+    printf("Num Tiles:%zu, BlockDim:%u\n", num_tiles, BLOCK_DIM);
 
-    int num_tiles = y_dim / BLOCK_DIM;
-    printf("hostk_matmul_tiled=> DATA_SIZE:%d, BLOCK_SIZE:%d, num_tiles:%d \n", DIM_SIZE, BLOCK_DIM ,num_tiles);
-   // printf("Host Tiled: In hostk_matmul_tiled, Allocated Local Memory\n");
+    //print_matrix(A, M, N);
+    //print_matrix(B, N, P);
 
-    /* iterate for each tile of otput matrix */
-    for (int y = 0; y < y_dim; y += BLOCK_DIM){
-        for (int x = 0; x < x_dim; x+= BLOCK_DIM){
+    /* for each tile of the output matrix */
+    for (int y = 0; y < M; y += BLOCK_DIM)
+    {
+        for (int x = 0; x < P; x += BLOCK_DIM)
+        {
+            /* Init given output tile */
+            memset(sm_C, 0, (sizeof(float) * BLOCK_DIM * BLOCK_DIM));
 
-            for (int ty = 0; ty < BLOCK_DIM; ty ++){
-                for (int tx = 0; tx < BLOCK_DIM; tx++){
-                    sm_A[ty][tx] = 0.0f;
-                    sm_B[ty][tx] = 0.0f;
-                    sm_C[ty][tx] = 0.0f;
-                }
-            }
+            for (int tileIdx = 0; tileIdx < N; tileIdx += BLOCK_DIM)
+            {
+                /* Init Shared memory matrices */
+                memset(sm_A, 0, (sizeof(float) * BLOCK_DIM * BLOCK_DIM));
+                memset(sm_B, 0, (sizeof(float) * BLOCK_DIM * BLOCK_DIM));
 
-            for (int tile = 0; tile < num_tiles; tile ++){
+                //printf("This SM Portion Init \n");
+                //print_matrix((const float *)sm_A, BLOCK_DIM, BLOCK_DIM);
+                //print_matrix((const float *)sm_B, BLOCK_DIM, BLOCK_DIM);
 
-                for (int ty = 0; ty < BLOCK_DIM; ty++){
-                    for (int tx = 0; tx < BLOCK_DIM; tx++){
-
-                        int flat_idx_a = ((y + ty) * DIM_SIZE) + ((tile * BLOCK_DIM) + tx);
-                        int flat_idx_b = ((tile * BLOCK_DIM + ty) * DIM_SIZE) + (x + tx);
-                        //int flat_idx_b = (((tile * BLOCK_DIM) + ty) * DIM_SIZE) + (x  + tx);
-                        //printf("flat_idx=>A:%d, B:%d\n", flat_idx_a, flat_idx_b);
-
-                        sm_A[ty][tx] = A[flat_idx_a];
-                        sm_B[ty][tx] = B[flat_idx_b]; 
+                /* Load values for matix A(M x N) same row count as  C (M X P) */
+                for (int ty = 0; ( (ty < BLOCK_DIM) && ( (y + ty) < M ) ); ty ++)
+                {
+                    /* The column count however should be the tile idx */
+                    for (int tx = 0; ( (tx < BLOCK_DIM) && ( (tileIdx + tx) < N)); tx++)
+                    {
+                        int row_index = (y + ty) * N; //each row has N elements
+                        int col_index = (tileIdx + tx);
+                        sm_A[ty][tx] = A[row_index + col_index];
                     }
                 }
+
+                /* Load values for matrix B(N x P) different row count as C (M x P),
+                   however it should be alighted to tile iterator */
+                for (int ty = 0; ((ty < BLOCK_DIM) && ( (tileIdx + ty) < N) ); ty++)
+                {
+                    /* the col position should be same as the output matrix */
+                    for (int tx = 0; ( (tx < BLOCK_DIM) && ( (x + tx) < P) );  tx++)
+                    {
+                        int row_index = (tileIdx + ty) * P; //each row has P elements
+                        int col_index = (x + tx);
+                        sm_B[ty][tx] = B[row_index + col_index];
+                    }
+                }
+
+                /* Perform Matrix Multiplication */
+                //printf("This SM Portion \n");
+                //print_matrix((const float *)sm_A, BLOCK_DIM, BLOCK_DIM);
+                //print_matrix((const float *)sm_B, BLOCK_DIM, BLOCK_DIM);
                 
-                hostk_matmul_tiled_cm((const float *)sm_A, (const float *)sm_B, (float *)sm_C, BLOCK_DIM, BLOCK_DIM);
+                /* The values written in output matrix C is  tile by tile left to right in x direction */
+                for (int ty = 0; ( (ty < BLOCK_DIM) && ((y + ty) < M) );  ty++)
+                {
+                    for (int tx = 0; ( (tx < BLOCK_DIM) && ( (x + tx) < P) ); tx++)
+                    {
+                        float rsum = 0.0f;
+                        for (int k = 0; ((k < BLOCK_DIM) && ((tileIdx + k) < N )); k++)
+                        {
+                            rsum += (sm_A[ty][k] * sm_B[k][tx]);
+                            //printf("Eh: A:%f, B:%f Rsum:%f\n", sm_A[ty][k], sm_B[k][tx], rsum);   
+                        }
+                        //printf("  Rsum: %f", rsum);
+                        
+                        sm_C[ty][tx] += rsum;
+                    }
+                    //printf("\n");
+                }
+                //printf("\n");
+
+                //print_matrix((const float *)sm_C, BLOCK_DIM, BLOCK_DIM);
             }
-            
-            for (int ty = 0; ty < BLOCK_DIM; ty ++){
-                for (int tx = 0; tx < BLOCK_DIM; tx++){
-                    int flat_idx_c = ((y + ty) * DIM_SIZE) + (x + tx);
-                    //printf("flat_idx_c(y:%d,x:%d): %d\n", y, x, flat_idx_c);
-                    C[flat_idx_c] = sm_C[ty][tx];
+
+            /* copy values from shared tile to global memory */
+            for (int ty = 0; ((ty < BLOCK_DIM) && ((y + ty) < M)) ; ty++)
+            {
+                for (int tx = 0; ((tx < BLOCK_DIM) && ((x + tx) < P)) ; tx++)
+                {
+                    int row_index = (y + ty) * P; //P elements per row
+                    int col_index = (x + tx);
+                    C[row_index + col_index] = sm_C[ty][tx];
                 }
             }
         }
@@ -262,32 +270,28 @@ void hostk_matmul_tiled(const float * A, const float *B, float *C, size_t y_dim,
 }
 
 
-void host_main_tiled(bool verif){
-    printf("Executing host_main_tiled()\n");
+void host_main_tiled(bool verif, size_t M, size_t N, size_t P)
+{
+    printf("Executing host_main_tiled(M:%zu, N:%zu, P:%zu)\n", M, N, P);
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
     float *h_A, *h_B, *h_C;
-    size_t alloc_size = 0;
+    size_t alloc_size_h_a = M * N * sizeof(float);
+    size_t alloc_size_h_b = N * P * sizeof(float);
+    size_t alloc_size_h_c = M * P * sizeof(float);
 
-    printf("Host Tiled: About to Begin Host Kernel\n");
+    h_A = (float *)malloc(alloc_size_h_a);
+    h_B = (float *)malloc(alloc_size_h_b);
+    h_C = (float *)malloc(alloc_size_h_c);
+    memset(h_C, 0, alloc_size_h_c);
 
-    alloc_size = DIM_SIZE * DIM_SIZE * sizeof(float);
-    h_A = (float *)malloc(alloc_size);
-    h_B = (float *)malloc(alloc_size);
-    h_C = (float *)malloc(alloc_size);
-    
-    generate_float_matrix(DIM_SIZE, DIM_SIZE, h_A);
-    generate_float_matrix(DIM_SIZE, DIM_SIZE, h_B);
-
-    //printf("Host Tiled: About to Begin Host Kernel\n");
+    generate_float_matrix(M, N, h_A);
+    generate_float_matrix(N, P, h_B);
 
     cudaEventRecord(start, 0);
-
-    hostk_matmul_tiled(h_A, h_B, h_C, DIM_SIZE, DIM_SIZE);
-    //print_matrix(h_C, DIM_SIZE, DIM_SIZE);
-
+    hostk_matmul_tiled(h_A, h_B, h_C, M, N, P);
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     float elapsed_time;
@@ -297,98 +301,101 @@ void host_main_tiled(bool verif){
     /* verify against traditional */
     if (verif)
     {
-        float *h_V = (float *)malloc(alloc_size);
-        hostk_matmul_basic(h_A, h_B, h_V, DIM_SIZE, DIM_SIZE);
-        //print_matrix(h_V, DIM_SIZE, DIM_SIZE);
-
-        for (int y =0; y < DIM_SIZE; y++){
-            for (int x = 0; x < DIM_SIZE; x++){
-                int flat_idx = y * DIM_SIZE + x;
-                if (fabsf(h_C[flat_idx] - h_V[flat_idx]) > 1e-3)
-               // if (h_C[flat_idx] != h_V[flat_idx])
-                {
-                    printf("Wrong Result From Host Tiled @(y,x):(%i,%i)=>flat:%i!\n", y, x, flat_idx);
-                    printf("Host Val:%f, Verification Val:%f\n", h_C[flat_idx], h_V[flat_idx]);
-                    exit(1);
-                }
-            }
-        }
-        free(h_V);
+        verify_results(h_A, h_B, h_C, M, N, P);
     } 
+
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
 
     free(h_A);
     free(h_B);
     free(h_C);
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
 }
 
 /* simple device kernel, each thread is responsible for an element in the output matrix,
     so each threads is responsible for processing and entire row and entire column
 */
-__global__ void devicek_matmul_basic(const float *gm_A, const float *gm_B, float *gm_C, size_t M, size_t N)
+__global__ void devicek_matmul_basic(const float *gm_A, const float *gm_B, float *gm_C, size_t M, size_t N, size_t P)
 {
     
     int tid_gl_y = threadIdx.y + (blockIdx.y * blockDim.y);
     int tid_gl_x = threadIdx.x + (blockIdx.x * blockDim.x);
     
-    if ((tid_gl_y < M) && (tid_gl_x < N)){
+    if ((tid_gl_y < M) && (tid_gl_x < P)){
+
         float rsum = 0.0f;
-        for (int i = 0; i < M; i++){
-            int flat_idx_A = (tid_gl_y * M + i);
-            int flat_idx_B = (i * M + tid_gl_x);
+        
+        for (int i = 0; i < N; i++){
+       
+            /* Matrix A has N elements per row*/
+            int flat_idx_A = (tid_gl_y * N + i);
+            
+            /* Matrix B has P elements per row */
+            int flat_idx_B = (i * P + tid_gl_x);
+            
             rsum += (gm_A[flat_idx_A] * gm_B[flat_idx_B]);
         }
-        gm_C[tid_gl_y * M + tid_gl_x] = rsum;
+       
+        int flat_idx_C = (tid_gl_y * P) + tid_gl_x;
+
+        gm_C[flat_idx_C] = rsum;
     }
 }
 
-void device_main_basic(bool verif) {
-    printf("Executing device_main_basic()\n");
+
+void device_main_basic(bool verif, size_t M, size_t N, size_t P) {
+    printf("Executing device_main_basic(M:%zu, N:%zu, P:%zu) \n", M, N, P);
     
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
-    float *h_A, *h_B, *h_C, *h_V;
+    float *h_A, *h_B, *h_C;
     float *d_A, *d_B, *d_C;
-    size_t alloc_size = 0;
 
-    alloc_size = DIM_SIZE * DIM_SIZE * sizeof(float);
-    h_A = (float *)malloc(alloc_size);
-    h_B = (float *)malloc(alloc_size);
-    h_C = (float *)malloc(alloc_size);
+    size_t alloc_size_a = M * N * sizeof(float);
+    size_t alloc_size_b = N * P * sizeof(float);
+    size_t alloc_size_c = M * P * sizeof(float);
 
-    generate_float_matrix(DIM_SIZE, DIM_SIZE, h_A);
-    generate_float_matrix(DIM_SIZE, DIM_SIZE, h_B);
+    h_A = (float *)malloc(alloc_size_a);
+    h_B = (float *)malloc(alloc_size_b);
+    h_C = (float *)malloc(alloc_size_c);
+
+    if (!h_A || !h_B || !h_C) {
+        fprintf(stderr, "Host memory allocation failed\n");
+        exit(1);
+    }
+
+    generate_float_matrix(M, N, h_A);
+    generate_float_matrix(N, P, h_B);
 
     cudaEventRecord(start, 0);
 
-    cudaMalloc(&d_A, alloc_size);
+    cudaMalloc(&d_A, alloc_size_a);
     cuda_check_errors("alloc A in device");
     
-    cudaMalloc(&d_B, alloc_size);
+    cudaMalloc(&d_B, alloc_size_b);
     cuda_check_errors("alloc B in device");
 
-    cudaMalloc(&d_C, alloc_size);
+    cudaMalloc(&d_C, alloc_size_c);
     cuda_check_errors("alloc C in device");
 
     //copy data
-    cudaMemcpy(d_A, h_A, alloc_size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_A, h_A, alloc_size_a, cudaMemcpyHostToDevice);
     cuda_check_errors("mecmpy A H2D");
    
-    cudaMemcpy(d_B, h_B, alloc_size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, h_B, alloc_size_b, cudaMemcpyHostToDevice);
     cuda_check_errors("memcpy B H2D");
 
     dim3 block_size(BLOCK_DIM, BLOCK_DIM);
-    int num_blocks_x = (DIM_SIZE + block_size.x - 1) / block_size.x;
-    int num_blocks_y = (DIM_SIZE + block_size.y - 1) / block_size.y; 
+    size_t num_blocks_y = (M + block_size.y - 1) / block_size.y;
+    size_t num_blocks_x = (P + block_size.x - 1) / block_size.x;
     dim3 grid_size(num_blocks_x, num_blocks_y);
-    devicek_matmul_basic<<<grid_size, block_size>>>(d_A, d_B, d_C, DIM_SIZE, DIM_SIZE);
+    devicek_matmul_basic<<<grid_size, block_size>>>(d_A, d_B, d_C, M, N, P);
     cuda_check_errors("klaunch");
     cudaDeviceSynchronize();
     cuda_check_errors("dev synch");
-    cudaMemcpy(h_C, d_C, alloc_size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_C, d_C, alloc_size_c, cudaMemcpyDeviceToHost);
     cuda_check_errors("memcpy C D2H");
 
     cudaEventRecord(stop, 0);
@@ -397,43 +404,27 @@ void device_main_basic(bool verif) {
     cudaEventElapsedTime(&elapsed_time, start, stop);
     printf("Device Basic Elapsed Time: %f ms\n", elapsed_time);
 
+    //print_matrix(h_A, M, N);
+    //print_matrix(h_B, N, P);
+    //print_matrix(h_C, M, P);
+
     //verify
     if (verif)
     {
-        h_V = (float *)malloc(alloc_size);
-        hostk_matmul_basic(h_A, h_B, h_V, DIM_SIZE, DIM_SIZE);
-
-        for (int y =0; y < DIM_SIZE; y++){
-            for (int x = 0; x < DIM_SIZE; x++){
-                int flat_idx = y * DIM_SIZE + x;
-                if (fabsf(h_C[flat_idx] - h_V[flat_idx]) > 1e-3)
-                //if (h_C[flat_idx] != h_V[flat_idx])
-                {
-                    printf("Wrong Result From Device @(y,x):(%i,%i)=>flat:%i!\n", y, x, flat_idx);
-                    printf("Host Val:%f, DeVIce Val:%f\n", h_C[flat_idx], h_V[flat_idx]);
-                    exit(1);
-                }
-            }
-        }
-        
-        free(h_V);
-        printf("Correct Results it seems\n");
+        verify_results(h_A, h_B, h_C, M, N, P);
     } 
 
-    //print_matrix(h_A, DIM_SIZE, DIM_SIZE);
-    //print_matrix(h_B, DIM_SIZE, DIM_SIZE);
-    //print_matrix(h_C, DIM_SIZE, DIM_SIZE);
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
 
     cudaFree(d_A);
     cudaFree(d_B);
-    cudaFree(d_C); 
+    cudaFree(d_C);
 
     free(h_A);
     free(h_B);
     free(h_C);
 
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
 }
 
 /*
@@ -625,7 +616,7 @@ void device_main_tiled(bool verif) {
     if (verif)
     {
         float *h_V = (float *)malloc(alloc_size);
-        hostk_matmul_basic(h_A, h_B, h_V, DIM_SIZE, DIM_SIZE);
+        hostk_matmul_basic(h_A, h_B, h_V, DIM_SIZE, DIM_SIZE, DIM_SIZE);
 
         for (int y =0; y < DIM_SIZE; y++){
             for (int x = 0; x < DIM_SIZE; x++){
@@ -657,13 +648,17 @@ void device_main_tiled(bool verif) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 4) {
-        fprintf(stderr, "Usage: %s <mode> [submode] {result_verif}\n", argv[0]);
+    if (argc < 7) {
+        fprintf(stderr, "Usage: %s <mode> [submode] {result_verif} [M] [N] [P] \n", argv[0]);
         return 1;
     }
 
     bool verif = (strcmp(argv[3], "TRUE") == 0);
     printf("Result Verification ? : %d\n", verif);
+    size_t M = atoi(argv[4]);
+    size_t N = atoi(argv[5]);
+    size_t P = atoi(argv[6]);
+    printf("Data Parameter(M:%zu, N:%zu, P:%zu)=>MatA(M:%zu,N:%zu), MatB(N:%zu,P:%zu), MatC(M:%zu, P:%zu)\n", M, N, P, M, N, N, P, M, P);
 
     if (strcmp(argv[1], "HOST") == 0) {
         if (argc < 4){
@@ -671,9 +666,9 @@ int main(int argc, char *argv[]) {
             return 1;
         }
         if (strcmp(argv[2], "BASIC") == 0) {
-            host_main();
+            host_main_basic(M, N, P);
         } else {
-            host_main_tiled(verif);
+            host_main_tiled(verif, M, N, P);
         }
     } else if (strcmp(argv[1], "DEVICE") == 0) {
         if (argc < 4) {
@@ -684,7 +679,7 @@ int main(int argc, char *argv[]) {
         print_device_prop();
 
         if (strcmp(argv[2], "BASIC") == 0) {
-            device_main_basic(verif);
+            device_main_basic(verif, M, N, P);
         } else {
             device_main_tiled(verif);
         }
