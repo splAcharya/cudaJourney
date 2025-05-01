@@ -27,10 +27,10 @@ void print_device_prop()
     printf("\n\n");
 }
 
-const int DIM_SIZE =  95;
 const int BLOCK_DIM = 16; /* 16 * 16 = 256*/
 
-void generate_float_matrix(size_t M, size_t N, float *output_matrix) {
+void generate_float_matrix(size_t M, size_t N, float *output_matrix) 
+{
     
     for (int y = 0; y < M; y++){
         
@@ -47,7 +47,9 @@ void generate_float_matrix(size_t M, size_t N, float *output_matrix) {
     }
 }
 
-void print_matrix(const float *matrix, size_t M, size_t N){
+__host__ __device__
+void print_matrix(const float *matrix, size_t M, size_t N)
+{
     for (int y = 0; y < M; y++){
         for (int x= 0; x < N; x++){
             printf("%f  ", matrix[ (y * N) + x]);
@@ -56,7 +58,6 @@ void print_matrix(const float *matrix, size_t M, size_t N){
     }
     printf("\n");
 }
-
 
 void hostk_matmul_basic(const float * A, const float * B, float * C, size_t M, size_t N, size_t P)
 {
@@ -91,7 +92,8 @@ void hostk_matmul_basic(const float * A, const float * B, float * C, size_t M, s
 }
 
 // Function declarations
-void host_main_basic(size_t M, size_t N, size_t P) {
+void host_main_basic(size_t M, size_t N, size_t P) 
+{
     printf("Executing host_main(M:%zu, N:%zu, P:%zu)\n", M, N, P);
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -117,7 +119,7 @@ void host_main_basic(size_t M, size_t N, size_t P) {
     cudaEventSynchronize(stop);
     float elapsed_time;
     cudaEventElapsedTime(&elapsed_time, start, stop);
-    printf("Host Elapsed Time: %f ms\n", elapsed_time);
+    printf("Host Basic Elapsed Time: %f ms\n", elapsed_time);
 
     //print_matrix(h_A, M, N);
     //print_matrix(h_B, N, P);
@@ -166,13 +168,7 @@ void verify_results(const float *A, const float *B, const float *C, size_t M, si
 void hostk_matmul_tiled(const float * A, const float *B, float *C, size_t M, size_t N, size_t P)
 {
     printf("In Host Tiled(M:%zu, N:%zu, P:%zu)\n", M, N, P);
-
-    if (M < BLOCK_DIM || N < BLOCK_DIM || P < BLOCK_DIM)
-    {
-        printf("Matrix Size is smaller than Block Size, skipping tiled matrix multiplication\n");
-        return;
-    }
-
+ 
     /* define tiles, set the size same as the block size in device
     to simulate device like kernels */
     float sm_A[BLOCK_DIM][BLOCK_DIM];
@@ -315,7 +311,8 @@ void host_main_tiled(bool verif, size_t M, size_t N, size_t P)
 /* simple device kernel, each thread is responsible for an element in the output matrix,
     so each threads is responsible for processing and entire row and entire column
 */
-__global__ void devicek_matmul_basic(const float *gm_A, const float *gm_B, float *gm_C, size_t M, size_t N, size_t P)
+__global__ 
+void devicek_matmul_basic(const float *gm_A, const float *gm_B, float *gm_C, size_t M, size_t N, size_t P)
 {
     
     int tid_gl_y = threadIdx.y + (blockIdx.y * blockDim.y);
@@ -343,7 +340,8 @@ __global__ void devicek_matmul_basic(const float *gm_A, const float *gm_B, float
 }
 
 
-void device_main_basic(bool verif, size_t M, size_t N, size_t P) {
+void device_main_basic(bool verif, size_t M, size_t N, size_t P) 
+{
     printf("Executing device_main_basic(M:%zu, N:%zu, P:%zu) \n", M, N, P);
     
     cudaEvent_t start, stop;
@@ -424,190 +422,164 @@ void device_main_basic(bool verif, size_t M, size_t N, size_t P) {
     free(h_A);
     free(h_B);
     free(h_C);
-
 }
 
+
 /*
-   The goal is to acheive some level of data level parallelism
-
-   1. Bring data from global memory to shared memory, 
-   2. The data in shared memory should be acessible to all threads within the tile/block.
-      So now do tiled matrix mltiplication.
-   3. Copy results over to output memory
-  
-   Iterate for all tiles 
-		   Each thread block must do all respective
-		   sub matrix computation i.e 
-		   each thread block must, 
-		   	a) load tiles/blocks from matrix A left to right
-			b) load tiles/blocks from matrix B top to bttom
-			c) perfrom submatrix multiplication and accumate that
-			   for all tiles [left to right] x [top to bottom]
-
-		  Each thread is responsible for 1 output element, now in tiled
-		  region, each thread block is responsible for each output
-		  tile.
-		  Given a thread's (x,y) position, 
-		  Each thread must load and element from left to right for given
-		  row/y positiion of matrix A
-
+Tile Matrix Multiplication Using Device
+1. The tile size will be same as the defined/max BLOCK_SIZE of the device.
+2. The threads within same block can access a shared memory.
+3. Each thread will access a element from global memory (from both Mat A and B).
+   Then write that result in the shared memory.
+4. Once the shared memory is populate, each thread perfom matrix multiplication
+   for 1 element of the output matrix. Swapping tiles in and out.
 */
-__global__ void devicek_matmul_tiled(const float* gm_A, const float* gm_B, float* gm_C, size_t Y_DIM, size_t X_DIM)
+__global__ 
+void devicek_matmul_tiled(const float* gm_A, const float* gm_B, float* gm_C, size_t M, size_t N, size_t P)
 {
-    /*
-        Steps
-        1. for each tile, load data from GM TO SM
-        2. Perform Matrix Multiplication
-        3. Write Output Back to GLobal Matrix
-    */
+    //printf("M:%d\n", M);
+    //printf("N:%d\n", N);
+    //printf("P:%d\n", P);
 
-    int tid_gl_x = (blockDim.x * blockIdx.x) + threadIdx.x;
-    int tid_gl_y = (blockDim.y * blockIdx.y) + threadIdx.y;
-    int tid_lc_x = threadIdx.x;
-    int tid_lc_y = threadIdx.y;
+    size_t tid_gl_y = (blockDim.y * blockIdx.y) + threadIdx.y;
+    size_t tid_gl_x = (blockDim.x * blockIdx.x) + threadIdx.x;
+    size_t tid_lc_y = threadIdx.y;
+    size_t tid_lc_x = threadIdx.x;
 
     __shared__ float sm_A[BLOCK_DIM][BLOCK_DIM];
     __shared__ float sm_B[BLOCK_DIM][BLOCK_DIM];
-    float running_partial_sum = 0.0f;
+    __shared__ float sm_C[BLOCK_DIM][BLOCK_DIM];
 
-    size_t num_tiles = (X_DIM + BLOCK_DIM - 1) / BLOCK_DIM;
 
-    /*
-    
-           Tile    0       1
-        ---------------------------------
-           col     0   1   2   3
-
-    Tile|ROw    
-    0   |   0      0   1   2   3    
-        |   1      4   5   6   7
-    1   |   2      8   9   10  11
-        |   3      12  13  14  15
-
-    Tile Jump
-    0   0   1
-    1   2   3
-
-    Inter Tile Jump: TileIdx * num_elements per tile
-    Inter Tile: Inter Tile + offset
+    /* NOTE: Previously, the most liekly issue was with the whole idea
+    of loading into shared memory... if all the computations happen
+    under the check (tid_gl_y < M) && (tid_gl_x < P)... however
+    the idea is for a block of thread to first load value into the shared 
+    memory, for thread block that are not alined to input dimnesions,
+    we cannos imply ignore threads beyond the M and P boundary, 
+    i.e for 3 x 3 matrix, the first 2 x 2 block works fine since
+    all the threads from 0..2 read from global memory and then write
+    into shared memory, however, threads 2...4 for the next block
+    only thread 2..3 will load vaalues the thread 3..4 will not do
+    anyhting thus the shared memory will not fully be read properly..
+    simply hostk_tiling cannot be mapped to device... need a little 
+    more thought :) .... this took a whole day... LMFAO !!!
+   
+            YOU NEED A FULL FREAKING BLOCK OF THREADS TO F****KING
+            LOAD VALUES INTO THE TILE FIRST...ISN'T IT DUMBASS!!! :)
     */
 
-    if ((tid_gl_y < Y_DIM) && (tid_gl_x < X_DIM))
+    /* init shared memory portion of the thread */
+    sm_C[tid_lc_y][tid_lc_x] = 0.0f;
+
+    /* wait for all threads to finih shared memory init */
+    //__syncthreads();
+
+    for (int tileIdx = 0; tileIdx < N; tileIdx += BLOCK_DIM)
     {
-        //An entire thread block loads its portion of data into shared memory 
-        //   starting from 0th tile to Nth tile. Each thread
-        // for its given its (y,x) position loads its data
-        running_partial_sum = 0.0f;
-       
-        //num_tiles = 1;
-        for (int i  = 0; i < num_tiles; i++)
-        { 
-            //for given thread'x (y,x) position load the specific item within current tile
-            // i.e for matrix A, it will be the same y position, but the x postition will be
-            // tile pos + offset of the sepcifc element withint the tile, whihc is 
-            //exactly the thread offset ==> tile_pos + threadIdx.x
-            //now for Matrix B, tile elements are (tile_size * x_dim apart)
+        int row_idx_a = (tid_gl_y * N); //N elements per row
+        int col_idx_a = (tileIdx + tid_lc_x);   
+        int idx_a = row_idx_a + col_idx_a;
+        
+        if ((tid_gl_y < M) && (col_idx_a < N))
+            sm_A[tid_lc_y][tid_lc_x] = gm_A[idx_a];
+        else
+            sm_A[tid_lc_y][tid_lc_x] = 0.0f;
 
-            int tile_pos_a = (i * BLOCK_DIM);
-            int a_idx =  (tid_gl_y * X_DIM) +  (tile_pos_a + threadIdx.x);
+        int row_idx_b = (tileIdx + tid_lc_y) * P; //P elements per row
+        int col_idx_b = (tid_gl_x);
+        int idx_b = row_idx_b + col_idx_b;
 
-            int tile_pos_b = (i  * BLOCK_DIM * X_DIM);
-            int b_idx =  (tile_pos_b + (threadIdx.y * X_DIM)) + tid_gl_x;
+        if ( ((tileIdx + tid_lc_y) < N) && ( col_idx_b < P) )
+            sm_B[tid_lc_y][tid_lc_x] = gm_B[idx_b];
+        else
+            sm_B[tid_lc_y][tid_lc_x] = 0.0f;
 
-            sm_A[tid_lc_y][tid_lc_x] = gm_A[a_idx];
-            sm_B[tid_lc_y][tid_lc_x] = gm_B[b_idx];
-
-            //printf("TGLY:%u, TGLX:%u, LCLY:%u, LGLX:%u, GM_A_IDX:%u, GM_B_IDX:%u, GM_A:%f, GM_B:%f\n", 
-            //        tid_gl_y, tid_gl_x, tid_lc_y, tid_lc_x, a_idx, b_idx, gm_A[a_idx], gm_B[b_idx]);
-
-            //printf("TGLY:%u, TGLX:%u, SM_A:%f, SM_B:%f,  SM_C:%f\n", 
-            //       tid_gl_y, tid_gl_x, sm_A[tid_lc_y][tid_lc_x], 
-            //       sm_B[tid_lc_y][tid_lc_x], sm_C[tid_lc_y][tid_lc_x]);
-
-            //wait for shared memory populate to finish
-            __syncthreads();
-
-            //now that each thread had loaded its portion of data into shared memory, 
-            //perfom matrix muplication on the sub matrix, each thread only does
-            //its portion of matrix multiplication i.e only 1 element of the output matrix
-            float rsum = 0.0f;
-            for (int idx = 0; idx < BLOCK_DIM; idx++)
-            {
-                //printf("TGLY:%u, TGLX:%u, SM_A:%f, SM_B:%f,  SM_C:%f\n", 
-                //   tid_gl_y, tid_gl_x, sm_A[tid_lc_y][tid_lc_x], 
-                //   sm_B[tid_lc_y][tid_lc_x], sm_C[tid_lc_y][tid_lc_x]);
-
-                rsum += (sm_A[tid_lc_y][idx] * sm_B[idx][tid_lc_x]);
-            }
-
-            //udpate shared memory
-            running_partial_sum += rsum;
-        }
-
-        //wait for full tiles to completel yupdate shared memory
         __syncthreads();
 
-        //now that all the partial multiplications are completed,
-        //update the global mmemory output
-        int c_idx = tid_gl_y* X_DIM + tid_gl_x;
-        gm_C[c_idx] = running_partial_sum;
-        //printf("Outputidx:%u, Val:%f\n", c_idx, gm_C[c_idx]);
+        float rsum = 0.0f;
+        for (int ti = 0; ti < BLOCK_DIM; ti++)
+            rsum += (sm_A[tid_lc_y][ti] * sm_B[ti][tid_lc_x]);
+
+        sm_C[tid_lc_y][tid_lc_x] += rsum;
+    }
+
+    __syncthreads();
+
+    if (tid_gl_y < M && tid_gl_x < P)
+    {
+        int row_idx_c = (tid_gl_y * P); //P elements per row
+        int col_idx_c = (tid_gl_x);
+        int idx_c = row_idx_c + col_idx_c;
+        gm_C[idx_c] = sm_C[tid_lc_y][tid_lc_x];
     }
 }
 
-void device_main_tiled(bool verif) {
-    printf("Executing device_main_tiled()\n");
-    // Add the device_main_opt implementation here
-
+void device_main_tiled(bool verif, size_t M, size_t N, size_t P) 
+{
+    printf("Executing device_main_tiled(M:%zu, N:%zu, P:%zu) \n", M, N, P);
+    
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
     float *h_A, *h_B, *h_C;
     float *d_A, *d_B, *d_C;
+    
+    size_t alloc_size_a = M * N * sizeof(float);
+    size_t alloc_size_b = N * P * sizeof(float);
+    size_t alloc_size_c = M * P * sizeof(float);
 
-    size_t alloc_size = DIM_SIZE * DIM_SIZE * sizeof(float);
+    h_A = (float *)malloc(alloc_size_a);
+    h_B = (float *)malloc(alloc_size_b);
+    h_C = (float *)malloc(alloc_size_c);
 
-    h_A = (float *)malloc(alloc_size);
-    h_B = (float *)malloc(alloc_size);
-    h_C = (float *)malloc(alloc_size);
+    if (!h_A || !h_B || !h_C) {
+        fprintf(stderr, "Host memory allocation failed\n");
+        exit(1);
+    }
 
-    generate_float_matrix(DIM_SIZE, DIM_SIZE, h_A);
-    generate_float_matrix(DIM_SIZE, DIM_SIZE, h_B);
+    generate_float_matrix(M, N, h_A);
+    generate_float_matrix(N, P, h_B);
+
+    //print_matrix(h_A, M, N);
+    //print_matrix(h_B, N, P);
 
     cudaEventRecord(start, 0);
 
     /* Allocate memory in device */
-    cudaMalloc(&d_A, alloc_size);
+    cudaMalloc(&d_A, alloc_size_a);
     cuda_check_errors("alloc A in device");
 
-    cudaMalloc(&d_B, alloc_size);
+    cudaMalloc(&d_B, alloc_size_b);
     cuda_check_errors("alloc B in device");
 
-    cudaMalloc(&d_C, alloc_size);
+    cudaMalloc(&d_C, alloc_size_c);
     cuda_check_errors("alloc C in device");
 
     /* copy data from host to device */
-    cudaMemcpy(d_A, h_A, alloc_size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_A, h_A, alloc_size_a, cudaMemcpyHostToDevice);
     cuda_check_errors("h2d A");
 
-    cudaMemcpy(d_B, h_B, alloc_size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, h_B, alloc_size_b, cudaMemcpyHostToDevice);
     cuda_check_errors("h2d B");
 
     /* Laucnh kernel */
     dim3 block_size(BLOCK_DIM, BLOCK_DIM);
-    size_t num_blocks_y = (DIM_SIZE + block_size.y - 1) / block_size.y;
-    size_t num_blocks_x = (DIM_SIZE + block_size.x - 1) / block_size.x;
+    size_t num_blocks_y = (M + block_size.y - 1) / block_size.y;
+    size_t num_blocks_x = (P + block_size.x - 1) / block_size.x;
     dim3 grid_size(num_blocks_x, num_blocks_y);
-    devicek_matmul_tiled<<<grid_size, block_size>>>(d_A, d_B, d_C, DIM_SIZE, DIM_SIZE);
-    cuda_check_errors("klancuh");
+    devicek_matmul_tiled<<<grid_size, block_size>>>(d_A, d_B, d_C, M, N, P);
+    cuda_check_errors("k-launch");
+
     /* Make Host Wait for GPU i.e finish all GPU operatiosn so far */
     cudaDeviceSynchronize();
     cuda_check_errors("dev sync");
     /* copy results back to host */
-    cudaMemcpy(h_C, d_C, alloc_size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_C, d_C, alloc_size_c, cudaMemcpyDeviceToHost);
 
     cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
     float elapsed_time = 0.0f;
     cudaEventElapsedTime(&elapsed_time, start, stop);
     printf("Device tiled Elapsed Time: %f ms\n", elapsed_time);
@@ -615,39 +587,24 @@ void device_main_tiled(bool verif) {
     //verify
     if (verif)
     {
-        float *h_V = (float *)malloc(alloc_size);
-        hostk_matmul_basic(h_A, h_B, h_V, DIM_SIZE, DIM_SIZE, DIM_SIZE);
-
-        for (int y =0; y < DIM_SIZE; y++){
-            for (int x = 0; x < DIM_SIZE; x++){
-                int flat_idx = y * DIM_SIZE + x;
-                if (fabsf(h_C[flat_idx] - h_V[flat_idx]) > 1e-3)
-                //if (h_C[flat_idx] != h_V[flat_idx])
-                {
-                    printf("Wrong Result From Device @(y,x):(%i,%i)=>flat:%i!\n", y, x, flat_idx);
-                    printf("Result Val:%f, Verif Val:%f\n", h_C[flat_idx], h_V[flat_idx]);
-                    exit(1);
-                }
-            }
-        }
-
-        free(h_V);
-        printf("Correct Results it seems\n");
+        verify_results(h_A, h_B, h_C, M, N, P);
     }
-
-    free(h_A);
-    free(h_B);
-    free(h_C);
 
     cudaFree(d_A);
     cudaFree(d_B);
     cudaFree(d_C);
 
+    free(h_A);
+    free(h_B);
+    free(h_C);
+
     cudaEventDestroy(start);
     cudaEventDestroy(stop); 
 }
 
-int main(int argc, char *argv[]) {
+
+int main(int argc, char *argv[]) 
+{
     if (argc < 7) {
         fprintf(stderr, "Usage: %s <mode> [submode] {result_verif} [M] [N] [P] \n", argv[0]);
         return 1;
@@ -659,6 +616,12 @@ int main(int argc, char *argv[]) {
     size_t N = atoi(argv[5]);
     size_t P = atoi(argv[6]);
     printf("Data Parameter(M:%zu, N:%zu, P:%zu)=>MatA(M:%zu,N:%zu), MatB(N:%zu,P:%zu), MatC(M:%zu, P:%zu)\n", M, N, P, M, N, N, P, M, P);
+
+    if (M < BLOCK_DIM || N < BLOCK_DIM || P < BLOCK_DIM)
+    {
+        printf("Matrix Size is smaller than Block Size, skipping tiled matrix multiplication\n");
+        return 1;
+    }
 
     if (strcmp(argv[1], "HOST") == 0) {
         if (argc < 4){
@@ -681,7 +644,7 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[2], "BASIC") == 0) {
             device_main_basic(verif, M, N, P);
         } else {
-            device_main_tiled(verif);
+            device_main_tiled(verif, M, N, P);
         }
     } else {
         fprintf(stderr, "Unknown mode: %s\n", argv[1]);
