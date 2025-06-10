@@ -79,8 +79,8 @@ int generate_float_matrix(int X, int Y, int Z, float *output_matrix)
                 int flat_idx = layer_idx + row_idx + col_idx;
                 
                 float val = ((float ) rand() / RAND_MAX) * 2.0 + 1.0;
-                //*(output_matrix + flat_idx) = val;
-                *(output_matrix + flat_idx) = flat_idx % 9;
+                *(output_matrix + flat_idx) = val;
+                //*(output_matrix + flat_idx) = flat_idx % 9;
             }
         }
     }

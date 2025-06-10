@@ -1,0 +1,138 @@
+N:999999, Verify Results:1, Tests:1
+Tests For Prefix Sums
+Executing Host Main Basic:2
+Host Main Basic Elapsed Time: 0.004960
+N:2, BLOCK_DIM:256, num_blocks:1, max_blocks:65535
+Device Mode: 0 Elapsed Time:1.544352
+Last Element==> Actual:1.000000, Expected:1.000000
+N:2, BLOCK_DIM:256, num_blocks:1, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.421824
+Last Element==> Actual:1.000000, Expected:1.000000
+
+Executing Host Main Basic:7
+Host Main Basic Elapsed Time: 0.002240
+N:7, BLOCK_DIM:256, num_blocks:1, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.518432
+Last Element==> Actual:21.000000, Expected:21.000000
+N:7, BLOCK_DIM:256, num_blocks:1, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.347104
+Last Element==> Actual:21.000000, Expected:21.000000
+
+Executing Host Main Basic:9
+Host Main Basic Elapsed Time: 0.002176
+N:9, BLOCK_DIM:256, num_blocks:1, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.281856
+Last Element==> Actual:36.000000, Expected:36.000000
+N:9, BLOCK_DIM:256, num_blocks:1, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.430208
+Last Element==> Actual:36.000000, Expected:36.000000
+
+Executing Host Main Basic:22
+Host Main Basic Elapsed Time: 0.002144
+N:22, BLOCK_DIM:256, num_blocks:1, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.301088
+Last Element==> Actual:78.000000, Expected:78.000000
+N:22, BLOCK_DIM:256, num_blocks:1, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.367488
+Last Element==> Actual:78.000000, Expected:78.000000
+
+Executing Host Main Basic:77
+Host Main Basic Elapsed Time: 0.002240
+N:77, BLOCK_DIM:256, num_blocks:1, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.398656
+Last Element==> Actual:298.000000, Expected:298.000000
+N:77, BLOCK_DIM:256, num_blocks:1, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.796320
+Last Element==> Actual:298.000000, Expected:298.000000
+
+Executing Host Main Basic:99
+Host Main Basic Elapsed Time: 0.002240
+N:99, BLOCK_DIM:256, num_blocks:1, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.373504
+Last Element==> Actual:396.000000, Expected:396.000000
+N:99, BLOCK_DIM:256, num_blocks:1, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.527360
+Last Element==> Actual:396.000000, Expected:396.000000
+
+Executing Host Main Basic:777
+Host Main Basic Elapsed Time: 0.002496
+N:777, BLOCK_DIM:256, num_blocks:4, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.436384
+Last Element==> Actual:3099.000000, Expected:3099.000000
+N:777, BLOCK_DIM:256, num_blocks:4, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.371904
+Last Element==> Actual:3099.000000, Expected:3099.000000
+
+Executing Host Main Basic:999
+Host Main Basic Elapsed Time: 0.002112
+N:999, BLOCK_DIM:256, num_blocks:4, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.458144
+Last Element==> Actual:3996.000000, Expected:3996.000000
+N:999, BLOCK_DIM:256, num_blocks:4, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.367104
+Last Element==> Actual:3996.000000, Expected:3996.000000
+
+Executing Host Main Basic:2222
+Host Main Basic Elapsed Time: 0.002208
+N:2222, BLOCK_DIM:256, num_blocks:9, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.530976
+Last Element==> Actual:8884.000000, Expected:8884.000000
+N:2222, BLOCK_DIM:256, num_blocks:9, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.368896
+Last Element==> Actual:8884.000000, Expected:8884.000000
+
+Executing Host Main Basic:9999
+Host Main Basic Elapsed Time: 0.044288
+N:9999, BLOCK_DIM:256, num_blocks:40, max_blocks:65535
+Device Mode: 0 Elapsed Time:1.904096
+Last Element==> Actual:39996.000000, Expected:39996.000000
+N:9999, BLOCK_DIM:256, num_blocks:40, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.442208
+Last Element==> Actual:39996.000000, Expected:39996.000000
+
+Executing Host Main Basic:22222
+Host Main Basic Elapsed Time: 0.018528
+N:22222, BLOCK_DIM:256, num_blocks:87, max_blocks:65535
+Device Mode: 0 Elapsed Time:6.299392
+Last Element==> Actual:88884.000000, Expected:88884.000000
+N:22222, BLOCK_DIM:256, num_blocks:87, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.519552
+Last Element==> Actual:88884.000000, Expected:88884.000000
+
+Executing Host Main Basic:99999
+Host Main Basic Elapsed Time: 0.432256
+N:99999, BLOCK_DIM:256, num_blocks:391, max_blocks:65535
+Device Mode: 0 Elapsed Time:105.504707
+Last Element==> Actual:399996.000000, Expected:399996.000000
+N:99999, BLOCK_DIM:256, num_blocks:391, max_blocks:65535
+Device Mode: 1 Elapsed Time:2.139840
+Last Element==> Actual:399996.000000, Expected:399996.000000
+
+Executing Host Main Basic:222222
+Host Main Basic Elapsed Time: 0.540608
+Skipping Mode 0
+N:222222, BLOCK_DIM:256, num_blocks:869, max_blocks:65535
+Device Mode: 1 Elapsed Time:5.937920
+Last Element==> Actual:888879.000000, Expected:888879.000000
+
+Executing Host Main Basic:999999
+Host Main Basic Elapsed Time: 4.420032
+Skipping Mode 0
+N:999999, BLOCK_DIM:256, num_blocks:3907, max_blocks:65535
+Device Mode: 1 Elapsed Time:42.449471
+Last Element==> Actual:3999996.000000, Expected:3999996.000000
+
+Executing Host Main Basic:2222222
+Host Main Basic Elapsed Time: 8.735808
+Skipping Mode 0
+N:2222222, BLOCK_DIM:256, num_blocks:8681, max_blocks:65535
+Device Mode: 1 Elapsed Time:162.266815
+Last Element==> Actual:8888878.000000, Expected:8888878.000000
+
+Executing Host Main Basic:9999999
+Host Main Basic Elapsed Time: 48.285023
+Skipping Mode 0
+N:9999999, BLOCK_DIM:256, num_blocks:39063, max_blocks:65535
+Device Mode: 1 Elapsed Time:3028.995361
+Last Element==> Actual:39999996.000000, Expected:39999996.000000
+

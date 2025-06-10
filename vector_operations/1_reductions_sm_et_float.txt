@@ -1,0 +1,11 @@
+N:5000, Verify Results:1, Tests:0
+Device Name: NVIDIA GeForce RTX 3050 Ti Laptop GPU
+Max Threads per Block: 1024
+Shared memory per block: 49152 bytes
+Max Threads per Multiprocessor: 1536
+Max Blocks per Multiprocessor: 16
+Number of SMs: 20
+
+
+N:5000, BLOCK_DIM:256, Num_Blocks:20
+Device Mode: 0 Elapsed Time:4.063072

@@ -1,0 +1,58 @@
+X:22, Y:22, Z:22, Verify Results:0, Tests:1
+Tests For Matrix Dims
+Executing Host Basic {X:3, Y:3, Z:3}
+Host Basic Elapsed Time: 0.011264 ms
+Executing Device Basic {X:3, Y:3, Z:3}
+Device basic elapsed time:1.611552
+Executing Device Tiled {X:3, Y:3, Z:3}
+Device tiled elapsed time:0.555840
+
+Executing Host Basic {X:5, Y:5, Z:5}
+Host Basic Elapsed Time: 0.059008 ms
+Executing Device Basic {X:5, Y:5, Z:5}
+Device basic elapsed time:0.380352
+Executing Device Tiled {X:5, Y:5, Z:5}
+Device tiled elapsed time:0.313440
+
+Executing Host Basic {X:17, Y:17, Z:17}
+Host Basic Elapsed Time: 2.538720 ms
+Executing Device Basic {X:17, Y:17, Z:17}
+Device basic elapsed time:0.315744
+Executing Device Tiled {X:17, Y:17, Z:17}
+Device tiled elapsed time:0.284704
+
+Executing Host Basic {X:13, Y:97, Z:59}
+Host Basic Elapsed Time: 38.713375 ms
+Executing Device Basic {X:13, Y:97, Z:59}
+Device basic elapsed time:1.346016
+Executing Device Tiled {X:13, Y:97, Z:59}
+Device tiled elapsed time:0.532224
+
+Executing Host Basic {X:113, Y:197, Z:159}
+Host Basic Elapsed Time: 1974.259399 ms
+Executing Device Basic {X:113, Y:197, Z:159}
+Device basic elapsed time:8.469856
+Executing Device Tiled {X:113, Y:197, Z:159}
+Device tiled elapsed time:7.370208
+
+Executing Host Basic {X:313, Y:397, Z:359}
+Host Basic Elapsed Time: 25714.300781 ms
+Executing Device Basic {X:313, Y:397, Z:359}
+Device basic elapsed time:259.015137
+Executing Device Tiled {X:313, Y:397, Z:359}
+Device tiled elapsed time:201.688416
+
+Executing Host Basic {X:513, Y:597, Z:559}
+Host Basic Elapsed Time: 98670.859375 ms
+Executing Device Basic {X:513, Y:597, Z:559}
+Device basic elapsed time:932.452942
+Executing Device Tiled {X:513, Y:597, Z:559}
+Device tiled elapsed time:801.412903
+
+Executing Host Basic {X:713, Y:797, Z:759}
+Host Basic Elapsed Time: 247662.937500 ms
+Executing Device Basic {X:713, Y:797, Z:759}
+Device basic elapsed time:2084.486572
+Executing Device Tiled {X:713, Y:797, Z:759}
+Device tiled elapsed time:1538.908691
+

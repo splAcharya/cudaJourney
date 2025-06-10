@@ -1,0 +1,227 @@
+N:999888, Verify Results:1, Tests:1
+Tests For Prefix Sums
+Executing Host Main Basic:2
+Host Main Basic Elapsed Time: 0.002048
+Executing Device Main (Mode:0) For N:2
+N:2, BLOCK_DIM:8, num_blocks:1, max_blocks:65535
+Device Mode: 0 Elapsed Time:5.125600
+Last Element==> Actual:1.000000, Expected:1.000000
+Executing Device Main (Mode:1) For N:2
+N:2, BLOCK_DIM:8, num_blocks:1, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.510624
+Last Element==> Actual:1.000000, Expected:1.000000
+Executing Device Main (Mode:2) For N:2
+N:2, BLOCK_DIM:8, num_blocks:1, max_blocks:65535
+Device Mode: 2 Elapsed Time:0.482336
+Last Element==> Actual:1.000000, Expected:1.000000
+
+Executing Host Main Basic:7
+Host Main Basic Elapsed Time: 0.002496
+Executing Device Main (Mode:0) For N:7
+N:7, BLOCK_DIM:8, num_blocks:1, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.065856
+Last Element==> Actual:21.000000, Expected:21.000000
+Executing Device Main (Mode:1) For N:7
+N:7, BLOCK_DIM:8, num_blocks:1, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.109440
+Last Element==> Actual:21.000000, Expected:21.000000
+Executing Device Main (Mode:2) For N:7
+N:7, BLOCK_DIM:8, num_blocks:1, max_blocks:65535
+Device Mode: 2 Elapsed Time:0.132160
+Last Element==> Actual:21.000000, Expected:21.000000
+
+Executing Host Main Basic:9
+Host Main Basic Elapsed Time: 0.002496
+Executing Device Main (Mode:0) For N:9
+N:9, BLOCK_DIM:8, num_blocks:2, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.089440
+Last Element==> Actual:36.000000, Expected:36.000000
+Executing Device Main (Mode:1) For N:9
+N:9, BLOCK_DIM:8, num_blocks:2, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.110592
+Last Element==> Actual:36.000000, Expected:36.000000
+Executing Device Main (Mode:2) For N:9
+N:9, BLOCK_DIM:8, num_blocks:2, max_blocks:65535
+Device Mode: 2 Elapsed Time:0.109248
+Last Element==> Actual:36.000000, Expected:36.000000
+
+Executing Host Main Basic:22
+Host Main Basic Elapsed Time: 0.002208
+Executing Device Main (Mode:0) For N:22
+N:22, BLOCK_DIM:8, num_blocks:3, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.063104
+Last Element==> Actual:78.000000, Expected:78.000000
+Executing Device Main (Mode:1) For N:22
+N:22, BLOCK_DIM:8, num_blocks:3, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.132672
+Last Element==> Actual:78.000000, Expected:78.000000
+Executing Device Main (Mode:2) For N:22
+N:22, BLOCK_DIM:8, num_blocks:3, max_blocks:65535
+Device Mode: 2 Elapsed Time:0.109952
+Last Element==> Actual:78.000000, Expected:78.000000
+
+Executing Host Main Basic:77
+Host Main Basic Elapsed Time: 0.003072
+Executing Device Main (Mode:0) For N:77
+N:77, BLOCK_DIM:8, num_blocks:10, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.069792
+Last Element==> Actual:298.000000, Expected:298.000000
+Executing Device Main (Mode:1) For N:77
+N:77, BLOCK_DIM:8, num_blocks:10, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.110592
+Last Element==> Actual:298.000000, Expected:298.000000
+Executing Device Main (Mode:2) For N:77
+N:77, BLOCK_DIM:8, num_blocks:10, max_blocks:65535
+Device Mode: 2 Elapsed Time:0.108896
+Last Element==> Actual:298.000000, Expected:298.000000
+
+Executing Host Main Basic:99
+Host Main Basic Elapsed Time: 0.007232
+Executing Device Main (Mode:0) For N:99
+N:99, BLOCK_DIM:8, num_blocks:13, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.071712
+Last Element==> Actual:396.000000, Expected:396.000000
+Executing Device Main (Mode:1) For N:99
+N:99, BLOCK_DIM:8, num_blocks:13, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.116608
+Last Element==> Actual:396.000000, Expected:396.000000
+Executing Device Main (Mode:2) For N:99
+N:99, BLOCK_DIM:8, num_blocks:13, max_blocks:65535
+Device Mode: 2 Elapsed Time:0.268512
+Last Element==> Actual:396.000000, Expected:396.000000
+
+Executing Host Main Basic:222
+Host Main Basic Elapsed Time: 0.003360
+Executing Device Main (Mode:0) For N:222
+N:222, BLOCK_DIM:8, num_blocks:28, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.075072
+Last Element==> Actual:879.000000, Expected:879.000000
+Executing Device Main (Mode:1) For N:222
+N:222, BLOCK_DIM:8, num_blocks:28, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.111584
+Last Element==> Actual:879.000000, Expected:879.000000
+Executing Device Main (Mode:2) For N:222
+N:222, BLOCK_DIM:8, num_blocks:28, max_blocks:65535
+Device Mode: 2 Elapsed Time:0.125920
+Last Element==> Actual:879.000000, Expected:879.000000
+
+Executing Host Main Basic:777
+Host Main Basic Elapsed Time: 0.002464
+Executing Device Main (Mode:0) For N:777
+N:777, BLOCK_DIM:8, num_blocks:98, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.118560
+Last Element==> Actual:3099.000000, Expected:3099.000000
+Executing Device Main (Mode:1) For N:777
+N:777, BLOCK_DIM:8, num_blocks:98, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.136736
+Last Element==> Actual:3099.000000, Expected:3099.000000
+Executing Device Main (Mode:2) For N:777
+N:777, BLOCK_DIM:8, num_blocks:98, max_blocks:65535
+Device Mode: 2 Elapsed Time:0.133632
+Last Element==> Actual:3099.000000, Expected:3099.000000
+
+Executing Host Main Basic:999
+Host Main Basic Elapsed Time: 0.002304
+Executing Device Main (Mode:0) For N:999
+N:999, BLOCK_DIM:8, num_blocks:125, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.255584
+Last Element==> Actual:3996.000000, Expected:3996.000000
+Executing Device Main (Mode:1) For N:999
+N:999, BLOCK_DIM:8, num_blocks:125, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.132704
+Last Element==> Actual:3996.000000, Expected:3996.000000
+Executing Device Main (Mode:2) For N:999
+N:999, BLOCK_DIM:8, num_blocks:125, max_blocks:65535
+Device Mode: 2 Elapsed Time:0.131840
+Last Element==> Actual:3996.000000, Expected:3996.000000
+
+Executing Host Main Basic:2222
+Host Main Basic Elapsed Time: 0.004128
+Executing Device Main (Mode:0) For N:2222
+N:2222, BLOCK_DIM:8, num_blocks:278, max_blocks:65535
+Device Mode: 0 Elapsed Time:0.310432
+Last Element==> Actual:8884.000000, Expected:8884.000000
+Executing Device Main (Mode:1) For N:2222
+N:2222, BLOCK_DIM:8, num_blocks:278, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.145088
+Last Element==> Actual:8884.000000, Expected:8884.000000
+Executing Device Main (Mode:2) For N:2222
+N:2222, BLOCK_DIM:8, num_blocks:278, max_blocks:65535
+Device Mode: 2 Elapsed Time:0.142560
+Last Element==> Actual:8884.000000, Expected:8884.000000
+
+Executing Host Main Basic:7777
+Host Main Basic Elapsed Time: 0.032704
+Executing Device Main (Mode:0) For N:7777
+N:7777, BLOCK_DIM:8, num_blocks:973, max_blocks:65535
+Device Mode: 0 Elapsed Time:2.740352
+Last Element==> Actual:31104.000000, Expected:31104.000000
+Executing Device Main (Mode:1) For N:7777
+N:7777, BLOCK_DIM:8, num_blocks:973, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.510848
+Last Element==> Actual:31104.000000, Expected:31104.000000
+Executing Device Main (Mode:2) For N:7777
+N:7777, BLOCK_DIM:8, num_blocks:973, max_blocks:65535
+Device Mode: 2 Elapsed Time:0.501856
+Last Element==> Actual:31104.000000, Expected:31104.000000
+
+Executing Host Main Basic:9999
+Host Main Basic Elapsed Time: 0.028384
+Executing Device Main (Mode:0) For N:9999
+N:9999, BLOCK_DIM:8, num_blocks:1250, max_blocks:65535
+Device Mode: 0 Elapsed Time:4.447200
+Last Element==> Actual:39996.000000, Expected:39996.000000
+Executing Device Main (Mode:1) For N:9999
+N:9999, BLOCK_DIM:8, num_blocks:1250, max_blocks:65535
+Device Mode: 1 Elapsed Time:0.767168
+Last Element==> Actual:39996.000000, Expected:39996.000000
+Executing Device Main (Mode:2) For N:9999
+N:9999, BLOCK_DIM:8, num_blocks:1250, max_blocks:65535
+Device Mode: 2 Elapsed Time:0.739360
+Last Element==> Actual:39996.000000, Expected:39996.000000
+
+Executing Host Main Basic:22222
+Host Main Basic Elapsed Time: 0.051808
+Executing Device Main (Mode:0) For N:22222
+N:22222, BLOCK_DIM:8, num_blocks:2778, max_blocks:65535
+Device Mode: 0 Elapsed Time:21.393663
+Last Element==> Actual:88884.000000, Expected:88884.000000
+Executing Device Main (Mode:1) For N:22222
+N:22222, BLOCK_DIM:8, num_blocks:2778, max_blocks:65535
+Device Mode: 1 Elapsed Time:3.266880
+Last Element==> Actual:88884.000000, Expected:88884.000000
+Executing Device Main (Mode:2) For N:22222
+N:22222, BLOCK_DIM:8, num_blocks:2778, max_blocks:65535
+Device Mode: 2 Elapsed Time:3.349440
+Last Element==> Actual:88884.000000, Expected:88884.000000
+
+Executing Host Main Basic:77777
+Host Main Basic Elapsed Time: 0.263712
+Executing Device Main (Mode:0) For N:77777
+N:77777, BLOCK_DIM:8, num_blocks:9723, max_blocks:65535
+Device Mode: 0 Elapsed Time:240.275070
+Last Element==> Actual:311104.000000, Expected:311104.000000
+Executing Device Main (Mode:1) For N:77777
+N:77777, BLOCK_DIM:8, num_blocks:9723, max_blocks:65535
+Device Mode: 1 Elapsed Time:24.221664
+Last Element==> Actual:311104.000000, Expected:311104.000000
+Executing Device Main (Mode:2) For N:77777
+N:77777, BLOCK_DIM:8, num_blocks:9723, max_blocks:65535
+Device Mode: 2 Elapsed Time:24.352896
+Last Element==> Actual:311104.000000, Expected:311104.000000
+
+Executing Host Main Basic:99999
+Host Main Basic Elapsed Time: 0.243904
+Executing Device Main (Mode:0) For N:99999
+N:99999, BLOCK_DIM:8, num_blocks:12500, max_blocks:65535
+Device Mode: 0 Elapsed Time:311.328003
+Last Element==> Actual:399996.000000, Expected:399996.000000
+Executing Device Main (Mode:1) For N:99999
+N:99999, BLOCK_DIM:8, num_blocks:12500, max_blocks:65535
+Device Mode: 1 Elapsed Time:39.799072
+Last Element==> Actual:399996.000000, Expected:399996.000000
+Executing Device Main (Mode:2) For N:99999
+N:99999, BLOCK_DIM:8, num_blocks:12500, max_blocks:65535
+Device Mode: 2 Elapsed Time:39.494144
+Last Element==> Actual:399996.000000, Expected:399996.000000
+
