@@ -300,6 +300,23 @@ int host_main_csr(int M, int N, int NNZ, bool verify)
 }
 
 
+int host_main_jds(int M, int N, int NNZ, bool verif)
+{
+    printf("Executing Host Main JDS, M:%d, N:%d, NNZ:%d\n", M, N, NNZ);
+
+    cudaEvent_t begin, end;
+    cudaEventCreate(&begin);
+    cudaEventCreate(&end);
+
+    int *h_in_row;
+    int *h_out_row;
+    int *h_in_val;
+
+    cudaEventDestroy(end);
+    cudaEventDestroy(begin);
+
+    return 0;
+}
 
 int verify_results_coo(
     const int   *h_in_row,  const int *h_in_col,
@@ -645,7 +662,10 @@ int main(int argc, char *argv[])
     int N = atoi(argv[4]);
     float NNZ_PCT = (float)atoi(argv[5]);
     int NNZ = (M * N) * (NNZ_PCT / 100);
-    int spmv_mode = (strcmp(argv[6], "COO") == 0) ? 0 : 1;
+    
+    int spmv_mode = (strcmp(argv[6], "COO") == 0) ? 0 :
+                    (strcmp(argv[6], "CSR") == 0) ? 1 : 2;
+
     bool verify_results = (strcmp(argv[7], "TRUE") == 0);
 
     printf("M:%d, N:%d,  MxN:%d, NNZ_PCT:%f, NNZ:%d, MODE:%d, Verify Results:%d\n", 

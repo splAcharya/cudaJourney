@@ -2,7 +2,7 @@
 #include <string.h>
 #include <cuda_runtime.h>
 
-const int BLOCK_DIM = 1024;
+const int BLOCK_DIM = 256;
 const int MAX_BLOCKS = 65535;
 const float ERR_THRES = 1e-3;
 
@@ -136,14 +136,26 @@ __global__ void devicek_basic(float *gm_in, float *gm_out, int N)
 {
     int lx = threadIdx.x;
     int gx = (blockDim.x * blockIdx.x) + lx;
-    float local_sum = 0.0f;
+    double local_sum = 0.0f;
+    int grid_stride = (blockDim.x * gridDim.x);
+    __shared__ float block_sum;
 
-    if (gx < N)
+    if (lx == 0)
+        block_sum = 0.0;
+
+    __syncthreads();
+
+    for (int i = gx; i < N; i += grid_stride)
     {
-        local_sum += (*(gm_in + gx));
+        local_sum += (double)gm_in[i];
     }
 
-    atomicAdd(gm_out, local_sum);
+    atomicAdd(&block_sum, (float)local_sum);
+
+    __syncthreads();
+
+    if (lx == 0)
+        atomicAdd(gm_out, block_sum);
 }
 
 /*
@@ -390,7 +402,8 @@ int main(int argc, char *argv[])
         } 
         else if (strcmp(argv[1], "DEVICE") == 0) 
         {
-            print_device_prop();
+            if (verify_results)
+                print_device_prop();
 
             if (strcmp(argv[2], "BASIC") == 0) 
             {
