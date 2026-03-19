@@ -25,9 +25,14 @@ using namespace cv;
 
 # define convert_to_gray(b, g, r) (0.299f * (r) + 0.587 * (g) + 0.114f * (b))
 
+constexpr const char* kInputImagePath = "inputs/manhattan_traffic.jpg";
+constexpr const char* kHostOutputPath = "outputs/grayscale/host_manhattan_gray.jpg";
+constexpr const char* kDeviceBasicOutputPath = "outputs/grayscale/device_basic_manhattan_gray.jpg";
+constexpr const char* kDeviceSmemOutputPath = "outputs/grayscale/device_smem_manhattan_gray.jpg";
+
 int read_image(unsigned char **rgb_image, int *width, int *height)
 {
-    Mat in_image = imread("manhattan_traffic.jpg", IMREAD_COLOR);
+    Mat in_image = imread(kInputImagePath, IMREAD_COLOR);
     
     if (in_image.empty()){
         printf("Failed TO Load Image\n");
@@ -76,7 +81,7 @@ int host_main()
     printf("Host Elapsed Times: %f ms\n", elapsed_time);
 
     cv::Mat gray_image(height, width, CV_8UC1, h_gray);
-    cv::imwrite("h_mh_gray.jpg", gray_image);
+    cv::imwrite(kHostOutputPath, gray_image);
 
     free(h_gray);
 
@@ -256,7 +261,7 @@ int  device_main_smem() {
     printf("Device SMEM Elapsed Times: %f ms\n", elapsed_time);
 
     cv::Mat gray_image(height, width, CV_8UC1, h_gray);
-    cv::imwrite("dsm_mh_gray.jpg", gray_image);
+    cv::imwrite(kDeviceSmemOutputPath, gray_image);
 
     free(h_gray);
     free(h_rgb);
@@ -347,7 +352,7 @@ int  device_main_basic() {
     printf("Device Basic Elapsed Times: %f ms\n", elapsed_time);
 
     cv::Mat gray_image(height, width, CV_8UC1, h_gray);
-    cv::imwrite("dbsic_mh_gray.jpg", gray_image);
+    cv::imwrite(kDeviceBasicOutputPath, gray_image);
 
     free(h_gray);
     free(h_rgb);

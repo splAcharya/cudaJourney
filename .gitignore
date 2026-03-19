@@ -1,15 +1,40 @@
+# Editors
+.vscode/
+.idea/
+.DS_Store
 
-# Ignore log files
+# Logs and temp files
 *.log
-
-# Ignore build directory
-build/
-
-# Ignore temporary files
 *.tmp
 
-# Ignore .lib files
-*.lib
+# Build directories
+build/
+dist/
 
-# Ignore .o files
+# Native build artifacts
 *.o
+*.obj
+*.a
+*.so
+*.dll
+*.dylib
+*.exe
+*.exp
+*.lib
+*.out
+a.out
+
+# Local executable outputs without extensions
+ImageProcessing/2_image_blur
+ImageProcessing/image_blur
+ImageProcessing/convolution
+ImageProcessing/grayscale_conversion
+
+# CUDA / profiling artifacts
+*.ncu-rep
+*.nsys-rep
+!vector_operations/profiles/*.ncu-rep
+
+# Python caches
+__pycache__/
+*.pyc

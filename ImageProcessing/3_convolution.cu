@@ -24,6 +24,12 @@ const int GY_MASK[MASK_DIM][MASK_DIM] = {
     {1,   2,  1}    
 };
 
+constexpr const char* kInputImagePath = "inputs/edgeflower.jpg";
+constexpr const char* kHostOutputPath = "outputs/edge_detection/host_edgeflower_bw.jpg";
+constexpr const char* kDeviceBasicOutputPath = "outputs/edge_detection/device_basic_edgeflower_bw.jpg";
+constexpr const char* kDeviceConstOutputPath = "outputs/edge_detection/device_const_edgeflower_bw.jpg";
+constexpr const char* kDeviceTiledOutputPath = "outputs/edge_detection/device_tiled_edgeflower_bw.jpg";
+
 
 #define cuda_check_errors(msg) \
     do \
@@ -56,9 +62,9 @@ void print_device_prop()
 int read_image(unsigned char **gray_image_serial, int *width, int *height)
 {
     // Read image directly as grayscale
-    //Mat gray = imread("manhattan_traffic.jpg", IMREAD_GRAYSCALE);
-    //Mat gray = imread("monarch_in_may.jpg", IMREAD_GRAYSCALE);
-    Mat gray = imread("edgeflower.jpg", IMREAD_GRAYSCALE);
+    //Mat gray = imread("inputs/manhattan_traffic.jpg", IMREAD_GRAYSCALE);
+    //Mat gray = imread("inputs/monarch_in_may.jpg", IMREAD_GRAYSCALE);
+    Mat gray = imread(kInputImagePath, IMREAD_GRAYSCALE);
     
     if (gray.empty())
     {
@@ -150,9 +156,9 @@ int host_main_basic(int thres_lo, int thres_hi, bool write_image)
         Mat gray_image(height, width, CV_8UC1, h_edge);
         Mat bw_image, inverted;
         threshold(gray_image, bw_image, thres_lo, thres_hi, THRESH_BINARY);  // adjust 100 if needed
-        imwrite("h_edge_bw.jpg", bw_image);
+        imwrite(kHostOutputPath, bw_image);
         //bitwise_not(bw_image, inverted);
-        //imwrite("h_edge_bwi.jpg", inverted);
+        //imwrite("outputs/edge_detection/host_edgeflower_bwi.jpg", inverted);
     }
 
     free(h_edge);
@@ -281,9 +287,9 @@ int device_main_basic(int thres_lo, int thres_hi, bool write_image)
         Mat gray_image(height, width, CV_8UC1, h_edge);
         Mat bw_image, inverted;
         threshold(gray_image, bw_image, thres_lo, thres_hi, THRESH_BINARY);  // adjust 100 if needed
-        imwrite("d_basic_edge_bw.jpg", bw_image);
+        imwrite(kDeviceBasicOutputPath, bw_image);
         //bitwise_not(bw_image, inverted);
-        //imwrite("d_basic_edge_bwi.jpg", inverted);
+        //imwrite("outputs/edge_detection/device_basic_edgeflower_bwi.jpg", inverted);
     }
 
     free(h_edge);
@@ -406,9 +412,9 @@ int device_main_const(int thres_lo, int thres_hi, bool write_image)
         Mat gray_image(height, width, CV_8UC1, h_edge);
         Mat bw_image, inverted;
         threshold(gray_image, bw_image, thres_lo, thres_hi, THRESH_BINARY);  // adjust 100 if needed
-        imwrite("d_const_edge_bw.jpg", bw_image);
+        imwrite(kDeviceConstOutputPath, bw_image);
         //bitwise_not(bw_image, inverted);
-        //imwrite("d_const_edge_bwi.jpg", inverted);
+        //imwrite("outputs/edge_detection/device_const_edgeflower_bwi.jpg", inverted);
     }
     
     cudaFree(d_edge);
@@ -603,7 +609,7 @@ int device_main_tiled(int thres_lo, int thres_hi, bool write_image)
         Mat gray_image(height, width, CV_8UC1, h_edge);
         Mat bw_image;
         threshold(gray_image, bw_image, thres_lo, thres_hi, THRESH_BINARY);  // adjust 100 if needed
-        imwrite("d_tiled_edge_bw.jpg", bw_image);
+        imwrite(kDeviceTiledOutputPath, bw_image);
     }
     
     cudaFree(d_edge);

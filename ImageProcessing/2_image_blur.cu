@@ -18,8 +18,12 @@ using namespace cv;
                                         __FILE__, \
                                         __LINE__); \
             exit(1); \
-        } \
+    } \
     }while(0)
+
+constexpr const char* kInputImagePath = "inputs/manhattan_traffic.jpg";
+constexpr const char* kHostOutputPath = "outputs/blur/host_manhattan_blurred.jpg";
+constexpr const char* kDeviceBasicOutputPath = "outputs/blur/device_basic_manhattan_blurred.jpg";
 
 void print_device_prop()
 {
@@ -36,7 +40,7 @@ void print_device_prop()
 
 void padded_image(unsigned char **padded_img, int *width, int *height, int *channels) {
     // Read the image
-    cv::Mat image = cv::imread("manhattan_traffic.jpg");
+    cv::Mat image = cv::imread(kInputImagePath);
     
     // Check if the image was loaded successfully
     if (image.empty()) {
@@ -138,7 +142,7 @@ int device_main_basic(){
     printf("Device Basic Elapsed Times: %f ms\n", elapsed_time);
 
     cv::Mat blurred_image(height, width, CV_8UC3, h_blurred);
-    cv::imwrite("dbsic_mh_blurred.jpg", blurred_image);
+    cv::imwrite(kDeviceBasicOutputPath, blurred_image);
 
     free(h_orginal);
     free(h_blurred);
@@ -207,7 +211,7 @@ int host_main()
     printf("Host Elapsed Times: %f ms\n", elapsed_time);
 
     cv::Mat blurred_image(height, width, CV_8UC3, h_blurred);
-    cv::imwrite("h_mh_blurred.jpg", blurred_image);
+    cv::imwrite(kHostOutputPath, blurred_image);
 
     free(h_blurred);
 
